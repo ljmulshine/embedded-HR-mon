@@ -49,10 +49,20 @@ void configure_gclk(void)
 	
 	// set modulation frequency to 32,000/(division factor)
 	modultn_clk.source_clock = SYSTEM_CLOCK_SOURCE_OSC32K;
-	modultn_clk.division_factor = 128;
-	system_gclk_gen_set_config(GCLK_GENERATOR_1,&modultn_clk);
+	modultn_clk.division_factor = 8;
+	system_gclk_gen_set_config(GCLK_GENERATOR_1, &modultn_clk);
 	
 	system_gclk_gen_enable(GCLK_GENERATOR_1);	
+}
+
+void config_gclk_chan(void)
+{
+	struct system_gclk_chan_config gclk_channel_conf; 
+	system_gclk_chan_get_config_defaults(&gclk_channel_conf);
+	
+	gclk_channel_conf.source_generator = GCLK_GENERATOR_1;
+	system_gclk_gen_set_config(TC3_GCLK_ID, &gclk_channel_conf);
+	system_gclk_chan_enable(TC3_GCLK_ID);
 }
 
 /*********************
@@ -65,11 +75,11 @@ void configure_gclk(void)
 
 // create timer counter module struct
 struct tc_module modultn_counter;
-
+int i = 0;
 // timer counter callback: toggles modulation pin
 void tc1_callback(struct tc_module *const modultn_counter)
 {
-
+	i++;
 	ioport_toggle_pin_level(MOD_PIN);
 	
 }
@@ -103,9 +113,11 @@ int main (void)
 	// Initialize system and necessary peripherals
 	system_init();
 	configure_gclk();
+	config_gclk_chan();
 	configure_pins();
 	configure_tc(); 
 	configure_tc_callbacks();
+	
 	while(true)
 	{
 	}
